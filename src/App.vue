@@ -120,7 +120,7 @@ export default {
                 if(accion==0) {//descargar
                     this.textoAlerta="Se descargó exitosamente el spotlight";
                 } else if (accion==1) {//subir
-                    this.textoAlerta="Se subió exitosamente el video";
+                    this.textoAlerta="Se generó exitosamente el spotlight";
                 } else {//eliminar
                     this.textoAlerta="Se eliminó exitosamente la evidencia";
                 }
@@ -130,7 +130,7 @@ export default {
                 if (accion==0) {//descargar
                     this.textoAlerta='Hubo un error al descargar el spotlight';
                 } else if(accion==1) {//subir
-                    this.textoAlerta="Hubo un error al subir el video";
+                    this.textoAlerta="Hubo un error al generar el spotlight";
                 } else {//eliminar
                     this.textoAlerta="Hubo un error al eliminar la evidencia";
                 }
