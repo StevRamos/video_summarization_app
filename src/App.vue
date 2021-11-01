@@ -13,12 +13,16 @@
         class="mt-8 mr-20 ml-20"
         v-bind:metrics="metrics"
       />
-      <div class="text-center mt-8">
-            <v-btn
+      <div class="text-center mt-8" :disabled="!isFormValid">
+        <!-- -->
+          <a 
+          >
+          <v-btn
               :disabled="!isFormValid"
               elevation="2"
               @click="descargarSpotlight"
-            >
+          >
+
               Descargar Spotlight
               <v-icon
                   medium
@@ -28,7 +32,9 @@
                 mdi-download
               </v-icon>
           </v-btn>
-          <v-progress-circular :value="40" indeterminate v-if="cargandoVideo"></v-progress-circular>
+          </a>
+        <!---->    
+        <v-progress-circular :value="40" indeterminate v-if="cargandoVideo"></v-progress-circular>
       </div>
       <VsmAlert
         v-bind:senalAlerta="senalAlerta"
@@ -63,7 +69,9 @@ export default {
     cargando: false,
     cargandoVideo: false,
     isFormValid: false,
-    metrics: []
+    metrics: [],
+    nameSpotlight: "dummy.pdf",
+    link: "www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
   }),
 
   methods: {
@@ -142,7 +150,12 @@ export default {
 
                 //const resSE = await subirEvidencia(this.archivos, this.idMuestra, this.idActividadEvaluacion);
                 //const status = resSE.data.message;
+                const link = document.createElement('a');
                 setTimeout(()=>{
+                    link.href = this.link;
+                    link.setAttribute('download', this.nameSpotlight);
+                    link.click();
+                    URL.revokeObjectURL(link.href);
                     this.cargandoVideo=false;
                     this.manejarAlerta(0,0);
                 },2000)
