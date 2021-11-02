@@ -54,6 +54,11 @@ import VsmFooter from '@/components/VsmFooter';
 import VsmModalInputVideo from '@/components/VsmModalInputVideo';
 import VsmAlert from "@/components/VsmAlert";
 import VsmDataTable from "@/components/VsmDataTable";
+import {
+  summarizeVideo,
+  getSpotlight
+} from '@/services/index';
+
 export default {
   name: 'App',
 
@@ -80,14 +85,15 @@ export default {
             this.isFormValid = false;
             this.metrics.splice(0)
             try{
-                this.archivos = archivosNuevos;
-
+                const resVS = await summarizeVideo(archivosNuevos);
+                this.cargando=false;
+                console.log(resVS);
                 //const resSE = await subirEvidencia(this.archivos, this.idMuestra, this.idActividadEvaluacion);
                 //const status = resSE.data.message;
-                setTimeout(()=>{
-                    this.cargando=false;
-                      this.isFormValid = true;
-                  this.manejarAlerta(0,1);
+                const status = resVS.status;
+                //setTimeout(()=>{
+                      
+
                     this.metrics.push(
                   { 
                     name: 'Final UCL 2019',
@@ -99,24 +105,22 @@ export default {
                     durspot: 5,
                   }
                 )
-                },2000)
-
-                //this.cargando=false;
+                //},2000)
                 
                 
-                
-
-                //if(status=='Files succesfully processed'){
-                  //  this.manejarAlerta(0,1);
+                if(status==201){
+                   this.manejarAlerta(0,1);
+                   this.isFormValid = true;
                   //  //alert('Se subieron correctamente los evidencias');
-                //}
-                //else{
-                  //  this.manejarAlerta(1,1);
+                }
+                else{
+                  this.manejarAlerta(1,1);
                   //  //alert('No se subieron las evidencias');
-                //}
+                }
             }
             catch(e){
                 this.cargando=false;
+                this.manejarAlerta(1,1);
                 console.log(e);
             }
             //this.getEvidenciasList();
@@ -147,31 +151,39 @@ export default {
     async descargarSpotlight(){
             this.cargandoVideo = true;
             try{
-
+                const resGS = await getSpotlight('output.mp4')
                 //const resSE = await subirEvidencia(this.archivos, this.idMuestra, this.idActividadEvaluacion);
                 //const status = resSE.data.message;
+                this.cargandoVideo=false;
+                console.log(resGS)
+                const status = resGS.status;
+                const blob = new Blob([resGS.data], {type: 'video/mp4'})
                 const link = document.createElement('a');
-                setTimeout(()=>{
-                    link.href = this.link;
-                    link.setAttribute('download', this.nameSpotlight);
-                    link.click();
-                    URL.revokeObjectURL(link.href);
-                    this.cargandoVideo=false;
-                    this.manejarAlerta(0,0);
-                },2000)
+
+                link.href = URL.createObjectURL(blob);
+                link.setAttribute('download', this.nameSpotlight);
+                link.click();
+                URL.revokeObjectURL(link.href);
+                
+                
+
+                //setTimeout(()=>{
+
+                //},2000)
                 //this.cargandoVideo=false;
                 //this.manejarAlerta(0,0);
-                //if(status=='Files succesfully processed'){
-                  //  this.manejarAlerta(0,1);
+                if(status==200){
+                    this.manejarAlerta(0,0);
                   //  //alert('Se subieron correctamente los evidencias');
-                //}
-                //else{
-                  //  this.manejarAlerta(1,1);
+                }
+                else{
+                    this.manejarAlerta(1,0);
                   //  //alert('No se subieron las evidencias');
-                //}
+                }
             }
             catch(e){
                 this.cargandoVideo=false;
+                this.manejarAlerta(1,0);
                 console.log(e);
             }
             //this.getEvidenciasList();
