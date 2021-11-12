@@ -13,9 +13,13 @@ export const summarizeVideo = async (video) => {
     return await axios.post(url, formData, {headers: {'Content-Type': 'multipart/form-data'}});
 }
 
-
-export const getSpotlight = async (filePath) => {
+export const getSpotlight = async (video_id, summary_id, proportion) => {
     const url = `${config.api}/get-spotlight`;
-    return await axios.get(`${url}?video_name=${filePath}`,
+    return await axios.get(`${url}?video_id=${video_id}&summary_id=${summary_id}&proportion=${proportion}`)
+}
+
+export const downloadSpotlight = async (spotlight_id) => {
+    const url = `${config.api}/download-spotlight`;
+    return await axios.get(`${url}?spotlight_id=${spotlight_id}`,
                         {responseType: 'blob'})
 }

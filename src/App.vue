@@ -8,19 +8,27 @@
       />
       <div class="flex justify-center">
         <v-progress-circular class="mt-8 flex justify-center" :value="40" indeterminate v-if="cargando"></v-progress-circular>
-      </div>  
+      </div> 
+      <VsmInputproportion 
+        class="mt-8 mr-20 ml-20"
+        v-bind:disabledProportion="!isFormValid"
+        v-bind:videoId="videoId"
+        v-bind:summaryId="summaryId"
+        @spotlightDone="spotlightDone" 
+      /> 
       <VsmDataTable 
         class="mt-8 mr-20 ml-20"
         v-bind:metrics="metrics"
       />
-      <div class="text-center mt-8" :disabled="!isFormValid">
+      <div class="text-center mt-8 mr-20 ml-20" :disabled="!spotlightValues.spotlightValid">
         <!-- -->
           <a 
           >
           <v-btn
-              :disabled="!isFormValid"
+              :disabled="!spotlightValues.spotlightValid"
               elevation="2"
               @click="descargarSpotlight"
+              class="text-center mt-8 mr-20 ml-20"
           >
 
               Descargar Spotlight
@@ -34,7 +42,7 @@
           </v-btn>
           </a>
         <!---->    
-        <v-progress-circular :value="40" indeterminate v-if="cargandoVideo"></v-progress-circular>
+        <v-progress-circular :value="40" indeterminate v-if="cargandoVideo" class="text-center mt-8 mr-20 ml-20"></v-progress-circular>
       </div>
       <VsmAlert
         v-bind:senalAlerta="senalAlerta"
@@ -54,9 +62,10 @@ import VsmFooter from '@/components/VsmFooter';
 import VsmModalInputVideo from '@/components/VsmModalInputVideo';
 import VsmAlert from "@/components/VsmAlert";
 import VsmDataTable from "@/components/VsmDataTable";
+import VsmInputproportion from "@/components/VsmInputproportion";
 import {
   summarizeVideo,
-  getSpotlight
+  downloadSpotlight
 } from '@/services/index';
 
 export default {
@@ -67,48 +76,73 @@ export default {
     VsmModalInputVideo,
     VsmAlert,
     VsmFooter,
-    VsmDataTable
+    VsmDataTable,
+    VsmInputproportion
   },
 
   data: () => ({
     cargando: false,
     cargandoVideo: false,
     isFormValid: false,
+    disabledProportion: true,
     metrics: [],
-    nameSpotlight: "dummy.pdf",
-    link: "www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
+    nameSpotlight: "spotlight.mp4",
+    spotlightValues: { spotlightValid: false,  spotlightId:"" },
+    videoId: "",
+    summaryId: ""
   }),
 
   methods: {
+    spotlightDone(value) {
+      this.spotlightValues = value;
+
+      const video_name = this.metrics[0].name;
+      const tam = this.metrics[0].tam;
+      const res = this.metrics[0].res;
+      const fps = this.metrics[0].fps;
+      const dur_orig = this.metrics[0].durorig;
+
+      this.metrics.splice(0)
+      this.metrics.push(
+        { 
+          name: video_name,
+          tam: tam,
+          res: res,
+          fps: fps,
+          durorig: dur_orig,
+          numseg: this.spotlightValues.nSegments,
+          durspot: this.spotlightValues.durSpotlight
+        }
+      ) 
+    },
+
     async cargarArchivos(archivosNuevos) {
             this.cargando = true;
             this.isFormValid = false;
+            this.spotlightValues = { spotlightValid: false,  spotlightId:""}
             this.metrics.splice(0)
             try{
                 const resVS = await summarizeVideo(archivosNuevos);
                 this.cargando=false;
                 console.log(resVS);
-                //const resSE = await subirEvidencia(this.archivos, this.idMuestra, this.idActividadEvaluacion);
-                //const status = resSE.data.message;
                 const status = resVS.status;
-                //setTimeout(()=>{
-                      
-
-                    this.metrics.push(
-                  { 
-                    name: 'Final UCL 2019',
-                    tam: 20,
-                    res: "1024x1024",
-                    fps: 24,
-                    durorig: 15,
-                    numseg: 2,
-                    durspot: 5,
-                  }
-                )
-                //},2000)
-                
-                
+                              
                 if(status==201){
+                    this.metrics.push(
+                      { 
+                        name: resVS.data.video_name,
+                        tam: Math.round(resVS.data.tam/1000000, -1),
+                        res: `${resVS.data.res_w} x ${resVS.data.res_h}`,
+                        fps: Math.round(resVS.data.fps, -1),
+                        durorig: `${Math.floor(Math.round(resVS.data.dur_orig)/60)} m ${Math.round(Math.round(resVS.data.dur_orig, -1)%60)} s`,
+                        numseg: "Genere el spotlight",
+                        durspot: "Genere el spotlight"
+                      }
+                    ) 
+
+                    this.videoId = resVS.data.video_id;
+                    this.summaryId = resVS.data.summary_id;
+
                    this.manejarAlerta(0,1);
                    this.isFormValid = true;
                   //  //alert('Se subieron correctamente los evidencias');
@@ -151,28 +185,23 @@ export default {
     async descargarSpotlight(){
             this.cargandoVideo = true;
             try{
-                const resGS = await getSpotlight('output.mp4')
+                const resDS = await downloadSpotlight(this.spotlightValues.spotlightId)
                 //const resSE = await subirEvidencia(this.archivos, this.idMuestra, this.idActividadEvaluacion);
                 //const status = resSE.data.message;
                 this.cargandoVideo=false;
-                console.log(resGS)
-                const status = resGS.status;
-                const blob = new Blob([resGS.data], {type: 'video/mp4'})
-                const link = document.createElement('a');
+                console.log("resDS::", resDS)
+                const status = resDS.status;
 
-                link.href = URL.createObjectURL(blob);
-                link.setAttribute('download', this.nameSpotlight);
-                link.click();
-                URL.revokeObjectURL(link.href);
                 
-                
-
-                //setTimeout(()=>{
-
-                //},2000)
-                //this.cargandoVideo=false;
-                //this.manejarAlerta(0,0);
+          
                 if(status==200){
+                  const blob = new Blob([resDS.data], {type: 'video/mp4'})
+                  const link = document.createElement('a');
+
+                  link.href = URL.createObjectURL(blob);
+                  link.setAttribute('download', this.nameSpotlight);
+                  link.click();
+                  URL.revokeObjectURL(link.href);
                     this.manejarAlerta(0,0);
                   //  //alert('Se subieron correctamente los evidencias');
                 }

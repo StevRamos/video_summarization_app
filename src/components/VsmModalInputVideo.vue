@@ -41,7 +41,7 @@
                     class="btnGuardarModal"
                     @click="importarDatos"
                     ><v-icon left>mdi-check</v-icon>
-                        GENERAR SPOTLIGHT
+                        GENERAR RESUMEN
                     </v-btn>
                 </v-card-actions>
             </v-card>
